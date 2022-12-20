@@ -3,6 +3,11 @@ import router from "./router";
 
 const server = fastify();
 
+server.register(import("@fastify/rate-limit"), {
+  max: 5,
+  timeWindow: "1 minute",
+});
+
 router(server);
 
 server.listen({ port: 8080 }, (err, address) => {
