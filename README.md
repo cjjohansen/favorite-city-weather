@@ -9,10 +9,9 @@ A Company needs to build a weather api for its mobile apps.
 It should be written in TypeScript and preferably use wellknown frameworks. 
 The company has chosen to use OpenWeather API as its weather forecast provider, so the task is to 
 consume forecasts from Open weather API and reformat data to suite the need of the consuming mobile apps.
-As an extra requirement, the api needs to be ratelimited to 10000requests per day.
+As an extra requirement, the api needs to be ratelimited to 10000 requests per day.
 
-
-Therefore
+**Therefore**
 
 We will use
 
@@ -24,9 +23,11 @@ We will use
 # Getting started
 
 We assume node is installed. 
-We assume that REST Client plugin has been isntalled in VSCODE.
+We assume that 'REST Client' plugin has been installed in VSCODE.
 
 > IMPORTANT You need to obtain your own openweather api key and replace it in \shared\configuration.ts
+
+Steps to get up and running
 
 * clone repository
 * run ``` npm install ``` 
@@ -45,7 +46,7 @@ server.register(import("@fastify/rate-limit"), {
 ```
 
 by setting max to only 5 and timeWindow to 1 minute
-We can simply manually press the send request link in weather-tests.http more than  times and we get the expected error response
+We can simply manually press the send request link in weather-tests.http more than 5 times and we get the expected error response
 
 ```json
 HTTP/1.1 429 Too Many Requests
@@ -65,36 +66,34 @@ Connection: close
 }
 ```
 
-We can set the rate limit to what strategy wee desire see [documentation at fastify ratelimit](https://github.com/fastify/fastify-rate-limit) 
+We can set the rate limit to what strategy we desire - See [documentation at fastify ratelimit](https://github.com/fastify/fastify-rate-limit) 
 
 # Solution considerations
 
 
 ## project and typescript setup
-We will setup a folder/ porject in visual studio code.
-We wnat to be able to debug the code wuth typescript type information. We do this by setting the sourcemap property in tsconfig.json to true and by creating a suitable launch.json file
-compiled typescript will be placed in the build folder 
+We will setup a folder/ project in visual studio code.
+We want to be able to debug the code with typescript type information. We do this by setting the sourcemap property in tsconfig.json to true and by creating a suitable launch.json file
+compiled typescript will be placed in the build folder. 
 
 ## Folder structure
 
-I'm preferring a vertical slice or screaming arhcitecture style, where code for each vertical slice or use case or logical domain area are placed in the same folder. In our case this is the weather folder.
+I'm preferring a vertical slice or screaming architecture style, where code for each vertical slice or use case or logical domain area are placed in the same folder. In our case this is the 'weather' folder.
 
-Fastify is all about plugins, so some documentation suggests to put all plugins in a plugin folder. But I woud like to avoid going down that road. The advantage of vertical slice folder strategy is that you mostly can make changes in one folder nd don't have to navigate into several folders.
-
+Fastify is all about plugins, so some documentation suggests to put all plugins in a plugin folder. But I would like to avoid going down that road. The advantage of vertical slice folder strategy is that you mostly can make changes in one folder and don't have to navigate into several folders.
 
 ## Rate limiting
 
-There exist a fastify plugin for ratelimiting. Fatifys plugin ecosystem should be one of its strengths.
+There exist a fastify plugin for rate limiting. Fatifys plugin ecosystem should be one of its strengths.
 
 We will use such a plugin.
 
-The problem formulation just stats that we should allow no more than 10.000 requests per day.
+The problem formulation just states that we should allow no more than 10.000 requests per day.
 A primitive solution would be to have a total count. But that would be unfair if a single user uses all the requests.
 
-A bette strategy might be to have an esitmate of daily amount of uses lets assume 1000 users. One could then rate limit based on the users ip address. Several ratelimiting strategies exists. Soem are discussed [here](https://cloud.google.com/architecture/rate-limiting-strategies-techniques)  
+A bette strategy might be to have an esitmate of daily amount of users lets assume 1000 users. One could then rate limit based on the users ip address. Several ratelimiting strategies exists. Soem are discussed [here](https://cloud.google.com/architecture/rate-limiting-strategies-techniques)  
 
-
-Also we are limiting the request to our own api when we in reality should limit calls to the 3rd party api.
+Also we are limiting the request to our own api when we in reality should limit calls to the 3rd party api (open weather api).
 
 We should also consider a cashing strategy. We dont need to call the 3rd party api multiple times in a short period of time for the same city as the forecast has likely not changed.
 
@@ -109,6 +108,18 @@ fastify has support for declaring schemas for request and reply of an endpoint, 
 * request body
 * reply payload
 
+We have added schemas in plain javascript. But when we use types in the route handlers. The schema is not really mandatory. And if we get it wrong it could break functionality. for instsance I have commented out response schema in routes.ts. Simply because I didnt want to specify the type for ForeCastResponse.
+
+```javascript
+  // response: {
+      //   200: {
+      //     type: "object",
+      //     properties: {
+      //       hello: { type: "string" },
+      //     },
+      //   },
+      // },
+```
 
 ### Caching
 
@@ -121,9 +132,11 @@ Its possible to create the schemas in typescript using @sinclair/typebox npm pac
 
 Its described in detail in  [fastify typescript documentation](https://www.fastify.io/docs/latest/Reference/TypeScript/)
 
+Also I have defined the type ForecastResponse myself. But It must be possible to import that type from openweather api somehow.
+
 ### code deduplication
 
-Ther eis some code duplication that could be removed. For instance some of the code in the two functions calling openweather api duplicates code. So some axios api instance could be made usable so errorhandling is not duplicated.
+There is some code duplication that could be removed. For instance some of the code in the two functions calling openweather api duplicates code. So some axios api instance could be made reusable so errorhandling is not duplicated.
 
 ### error handling
 
@@ -144,7 +157,7 @@ It might have been possible to save some time by using one of these packages.
 
 ### proper structuring of configuration
 
-We have used a naive configuration approach. We should move configuration to configuration fiels and store secrets  in a proper place and not in source code
+We have used a naive configuration approach. We should move configuration to configuration files and store secrets in a proper place and not in source code
 
 
 
