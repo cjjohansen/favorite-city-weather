@@ -26,8 +26,10 @@ We will use
 We assume node is installed. 
 We assume that REST Client plugin has been isntalled in VSCODE.
 
+> IMPORTANT You need to obtain your own openweather api key and replace it in \shared\configuration.ts
+
 * clone repository
-* run ```` npm install ```` 
+* run ``` npm install ``` 
 * in visual studio code press F5 to debug
 * use the weather-test.http file to mke requests to the two endpoints
 
@@ -35,8 +37,35 @@ We assume that REST Client plugin has been isntalled in VSCODE.
 
 ## testing rate limiting
 
+```typescript
+server.register(import("@fastify/rate-limit"), {
+  max: 5,
+  timeWindow: "1 minute",
+});
+```
 
+by setting max to only 5 and timeWindow to 1 minute
+We can simply manually press the send request link in weather-tests.http more than  times and we get the expected error response
 
+```json
+HTTP/1.1 429 Too Many Requests
+x-ratelimit-limit: 5
+x-ratelimit-remaining: 0
+x-ratelimit-reset: 51
+retry-after: 60000
+content-type: application/json; charset=utf-8
+content-length: 97
+Date: Tue, 20 Dec 2022 10:05:35 GMT
+Connection: close
+
+{
+  "statusCode": 429,
+  "error": "Too Many Requests",
+  "message": "Rate limit exceeded, retry in 1 minute"
+}
+```
+
+We can set the rate limit to what strategy wee desire see [documentation at fastify ratelimit](https://github.com/fastify/fastify-rate-limit) 
 
 # Solution considerations
 
@@ -65,6 +94,10 @@ A primitive solution would be to have a total count. But that would be unfair if
 A bette strategy might be to have an esitmate of daily amount of uses lets assume 1000 users. One could then rate limit based on the users ip address. Several ratelimiting strategies exists. Soem are discussed [here](https://cloud.google.com/architecture/rate-limiting-strategies-techniques)  
 
 
+Also we are limiting the request to our own api when we in reality should limit calls to the 3rd party api.
+
+We should also consider a cashing strategy. We dont need to call the 3rd party api multiple times in a short period of time for the same city as the forecast has likely not changed.
+
 ## Critique
 
 Learning a whole new framwork like Fastify takes time. So rather than making things perfect, I will try to explain what has been doen so far and what could be improved.
@@ -75,6 +108,12 @@ fastify has support for declaring schemas for request and reply of an endpoint, 
 * query string
 * request body
 * reply payload
+
+
+### Caching
+
+We could use caching to limit the amount of round trips to 3rd party api.
+
 
 ### typescript support
 
@@ -102,6 +141,10 @@ typescript wrappers exists for openweather api
 * [graphql-weather-api](https://github.com/konstantinmuenster/graphql-weather-api)
 
 It might have been possible to save some time by using one of these packages.
+
+### proper structuring of configuration
+
+We have used a naive configuration approach. We should move configuration to configuration fiels and store secrets  in a proper place and not in source code
 
 
 
